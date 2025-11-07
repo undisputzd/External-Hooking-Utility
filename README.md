@@ -39,3 +39,5 @@ eject("reach");
 ## Disclaimer
 
 This tool is for educational purposes only. Use at your own risk.
+
+Join my discord server below 😄: https://discord.gg/sCWYtYDjjr
