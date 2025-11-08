@@ -281,6 +281,26 @@ bool eject(const std::string& name)
     return true;
 }
 
+bool write(const std::string& name, std::variant<int, float> value)
+{
+    auto it = hooks.find(name);
+    if (it == hooks.end() || !it->second.active) return false;
+
+    HookData& data = it->second;
+    data.lastValue = value;
+
+    if (std::holds_alternative<int>(value))
+    {
+        int val = std::get<int>(value);
+        return WriteProcessMemory(processHandle, reinterpret_cast<LPVOID>(data.valueAddr), &val, sizeof(int), nullptr);
+    }
+    else
+    {
+        float val = std::get<float>(value);
+        return WriteProcessMemory(processHandle, reinterpret_cast<LPVOID>(data.valueAddr), &val, sizeof(float), nullptr);
+    }
+}
+
 void MonitorThread()
 {
     DWORD lastPID = Game::processId;
@@ -357,4 +377,5 @@ int main()
     return 0;
 
 }
+
 
