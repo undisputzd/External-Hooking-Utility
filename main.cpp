@@ -15,6 +15,11 @@ struct HookData
     uintptr_t detourAddr = 0;
     uintptr_t valueAddr = 0;
     std::vector<int> originalBytes;
+    std::vector<int> sig;
+    std::vector<int> hook;
+    std::vector<int> detour;
+    std::variant<int, float> lastValue;
+    int varSize = 4;
     bool active = false;
 };
 
@@ -377,5 +382,6 @@ int main()
     return 0;
 
 }
+
 
 
