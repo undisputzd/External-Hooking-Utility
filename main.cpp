@@ -306,6 +306,17 @@ bool write(const std::string& name, std::variant<int, float> value)
     }
 }
 
+uintptr_t resolvePointer(const std::string& name)
+{
+    auto it = hooks.find(name);
+    if (it == hooks.end() || !it->second.active) return 0;
+
+    uintptr_t resolvedAddr = 0;
+    ReadProcessMemory(processHandle, reinterpret_cast<LPCVOID>(it->second.valueAddr), &resolvedAddr, sizeof(resolvedAddr), nullptr);
+
+    return resolvedAddr;
+}
+
 void MonitorThread()
 {
     DWORD lastPID = Game::processId;
@@ -334,54 +345,3 @@ void MonitorThread()
         }
     }
 }
-
-int main()
-{
-    SetConsoleTitleA("Minecraft Hook Manager");
-
-    std::thread autoInject(MonitorThread); // Auto Inject
-
-    if (!Game::Initialize())
-    {
-        std::cout << "[*] Waiting for Minecraft to start...\n";
-        while (!Game::Initialize())
-            Sleep(1000);
-    }
-
-    std::cout << "[+] Connected to Minecraft\n";
-
-    // 1.21.12101.0 (1.21.121)
-    std::vector<int> reach_sig{ 0x74, -1, 0xF3, 0x0F, -1, -1, -1, -1, -1, -1, 0xEB, -1, 0xF3, 0x0F, -1, -1, -1, -1, -1, -1, 0x0F, 0x2F, -1, 0x76, -1, 0x41, 0xB5 };
-    std::vector<int> reach_hook{ 0xE9, -1, -1, -1, -1, 0x0F, 0x1F, 0x44, 0x00, 0x00 };
-    std::vector<int> reach_detour{ 0x90, 0xF3, 0x0F, 0x5D, 0x35, 0xF7, 0x00, 0x00, 0x00, 0xE9, -1, -1, -1, -1 };
-    
-    // 1.21.12101.0 (1.21.121)
-    std::vector<int> fov_sig{ 0xF3, 0x0F, 0x10, 0x50, 0x18, 0xB9, 0x54, 0x01, 0x00, 0x00, 0xF3, 0x0F, 0x10, 0x48, 0x14, 0xF3, 0x0F, 0x10, 0x40, 0x10, 0x0F, 0x2F, 0xD1, 0x77, 0x07, 0x0F, 0x28, 0xC8, 0xF3, 0x0F, 0x5F, 0xCA, 0xF3, 0x0F };
-    std::vector<int> fov_hook{ 0xE9, -1, -1, -1, -1 };
-    std::vector<int> fov_detour{ 0xF3, 0x0F, 0x10, 0x15, 0xF8, 0x00, 0x00, 0x00, 0xE9, -1, -1, -1, -1 };
-
-    if (inject("reach", reach_sig, reach_hook, reach_detour, 3.12f))
-        std::cout << "[+] Reach hook injected\n";
-    else
-        std::cout << "[-] Failed to inject reach hook\n";
-
-    if (inject("fov", fov_sig, fov_hook, fov_detour, 60.0f))
-        std::cout << "[+] FOV hook injected\n";
-    else
-        std::cout << "[-] Failed to inject FOV hook\n";
-
-    std::cout << "\nPress ENTER to eject hooks...\n";
-    std::cin.get();
-
-    if (eject("reach"))
-        std::cout << "[+] Reach hook ejected\n";
-
-    if (eject("fov"))
-        std::cout << "[+] FOV hook ejected\n";
-
-    return 0;
-
-}
-
-
-
