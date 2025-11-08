@@ -281,9 +281,40 @@ bool eject(const std::string& name)
     return true;
 }
 
+void MonitorThread()
+{
+    DWORD lastPID = Game::processId;
+
+    while (true)
+    {
+        Sleep(5000);
+
+        if (!Game::IsProcessValid())
+        {
+            for (auto& [name, data] : hooks)
+                data.active = false;
+
+            DWORD newPID = Game::GetProcessID("Minecraft.Windows.exe");
+            if (newPID != 0 && newPID != lastPID)
+            {
+                if (Game::Initialize())
+                {
+                    for (auto& [name, data] : hooks)
+                    {
+                        inject(name, data.sig, data.hook, data.detour, data.lastValue, data.varSize);
+                    }
+                    lastPID = newPID;
+                }
+            }
+        }
+    }
+}
+
 int main()
 {
     SetConsoleTitleA("Minecraft Hook Manager");
+
+    std::thread autoInject(MonitorThread); // Auto Inject
 
     if (!Game::Initialize())
     {
@@ -326,3 +357,4 @@ int main()
     return 0;
 
 }
+
