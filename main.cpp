@@ -306,6 +306,31 @@ bool write(const std::string& name, std::variant<int, float> value)
     }
 }
 
+bool read(const std::string& name, std::variant<int, float>& outValue)
+{
+    auto it = hooks.find(name);
+    if (it == hooks.end() || !it->second.active) return false;
+
+    HookData& data = it->second;
+    
+    if (std::holds_alternative<int>(data.lastValue))
+    {
+        int val;
+        if (!ReadProcessMemory(processHandle, reinterpret_cast<LPCVOID>(data.valueAddr), &val, sizeof(int), nullptr))
+            return false;
+        outValue = val;
+    }
+    else
+    {
+        float val;
+        if (!ReadProcessMemory(processHandle, reinterpret_cast<LPCVOID>(data.valueAddr), &val, sizeof(float), nullptr))
+            return false;
+        outValue = val;
+    }
+    
+    return true;
+}
+
 uintptr_t resolvePointer(const std::string& name)
 {
     auto it = hooks.find(name);
@@ -345,3 +370,4 @@ void MonitorThread()
         }
     }
 }
+
