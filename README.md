@@ -46,6 +46,9 @@ Removes the hook and restores original bytes.
 ### `write(name, value)`
 Updates the value at the hook's allocated memory address.
 
+### `read(name, value)`
+Reads the value at the hook's allocated memory address.
+
 ### `resolvePointer(name)`
 Reads and returns the resolved pointer address from the hook's memory.
 
