@@ -342,6 +342,14 @@ uintptr_t resolvePointer(const std::string& name)
     return resolvedAddr;
 }
 
+inline uintptr_t getAllocatedAddress(const std::string& name)
+{
+    auto it = hooks.find(name);
+    if (it == hooks.end() || !it->second.active) return 0;
+    
+    return it->second.valueAddr;
+}
+
 void MonitorThread()
 {
     DWORD lastPID = Game::processId;
@@ -370,4 +378,5 @@ void MonitorThread()
         }
     }
 }
+
 
